@@ -75,8 +75,15 @@ struct Camera
 	void Update(const Timer* pTimer)
 	{
 		const float deltaTime = pTimer->GetElapsed();
-		float moveSpeed{ 17.f };
-		const float rotSpeed{ 4.5f };
+
+		//Literal values, stopped when movement felt ok. Not sure about a permanent solution
+		const float baseMoveSpeed = 0.5f;
+		const float baseRotSpeed = 0.5f;;
+		const float FPSToConsider = 30.f;
+		//Super high framerate "fix", otherwise camera doesn't move
+		//
+		float moveSpeed{ baseMoveSpeed *std::max(deltaTime, 1.f / FPSToConsider) };
+		float rotSpeed{ baseRotSpeed * std::max(deltaTime, 1.f / FPSToConsider) };
 
 		//Keyboard Input
 		const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
@@ -87,19 +94,19 @@ struct Camera
 		}
 		if (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP])
 		{
-			origin += forward * moveSpeed * deltaTime;
+			origin += forward * moveSpeed;
 		}
 		if (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN])
 		{
-			origin -= forward * moveSpeed * deltaTime;
+			origin -= forward * moveSpeed;
 		}
 		if (pKeyboardState[SDL_SCANCODE_A] || pKeyboardState[SDL_SCANCODE_LEFT])
 		{
-			origin -= right * moveSpeed * deltaTime;
+			origin -= right * moveSpeed ;
 		}
 		if (pKeyboardState[SDL_SCANCODE_D] || pKeyboardState[SDL_SCANCODE_RIGHT])
 		{
-			origin += right * moveSpeed * deltaTime;
+			origin += right * moveSpeed ;
 		}
 
 
@@ -107,25 +114,26 @@ struct Camera
 		//Mouse Input
 		int mouseX{}, mouseY{};
 		const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
-		moveSpeed = 17.f;
+		moveSpeed = baseMoveSpeed * std::max(deltaTime, 1.f / FPSToConsider);
+		
 
 		if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT) && mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
 		{
 			if (mouseY > 0)
 			{
-				origin -= up * moveSpeed * deltaTime;
+				origin -= up * moveSpeed;
 			}
 			if (mouseY < 0)
 			{
-				origin += up * moveSpeed * deltaTime;
+				origin += up * moveSpeed;
 			}
 			if (mouseX > 0)
 			{
-				origin += right * moveSpeed * deltaTime;
+				origin += right * moveSpeed ;
 			}
 			if (mouseX < 0)
 			{
-				origin -= right * moveSpeed * deltaTime;
+				origin -= right * moveSpeed;
 			}
 
 		}
@@ -133,41 +141,41 @@ struct Camera
 		{
 			if (mouseY > 0)
 			{
-				origin -= forward * moveSpeed * deltaTime;
+				origin -= forward * moveSpeed ;
 			}
 			if (mouseY < 0)
 			{
-				origin += forward * moveSpeed * deltaTime;
+				origin += forward * moveSpeed ;
 			}
 			if (mouseX < 0)
 			{
-				totalYaw -= rotSpeed * deltaTime;
+				totalYaw -= rotSpeed;
 			}
 			if (mouseX > 0)
 			{
-				totalYaw += rotSpeed * deltaTime;
+				totalYaw += rotSpeed;
 			}
 		}
 		else if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
 		{
 			if (mouseX < 0)
 			{
-				totalYaw -= rotSpeed * deltaTime;
+				totalYaw -= rotSpeed;
 
 			}
 			if (mouseX > 0)
 			{
-				totalYaw += rotSpeed * deltaTime;
+				totalYaw += rotSpeed;
 
 			}
 			if (mouseY > 0)
 			{
-				totalPitch -= rotSpeed * deltaTime;
+				totalPitch -= rotSpeed;
 
 			}
 			if (mouseY < 0)
 			{
-				totalPitch += rotSpeed * deltaTime;
+				totalPitch += rotSpeed;
 
 			}
 		}

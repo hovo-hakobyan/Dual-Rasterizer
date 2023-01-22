@@ -207,6 +207,14 @@ namespace dae {
 		}
 	}
 
+	void Renderer::ToggleBoundingBoxVisualisation()
+	{
+		if (m_CurrentRenderMethod ==RenderMethod::Software)
+		{
+			m_pSoftwareRasterizer->ToggleBoundingBox();
+		}
+	}
+
 	void Renderer::PrintInfo()
 	{
 		std::cout << "[Key Bindings - SHARED]\n";

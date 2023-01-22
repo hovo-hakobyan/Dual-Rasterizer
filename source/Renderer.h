@@ -29,6 +29,7 @@ namespace dae
 		void CycleShadingMode();
 		void ToggleNormalMap();
 		void ToggleDepthBufferVisualisation();
+		void ToggleBoundingBoxVisualisation();
 
 	private:
 		enum class RenderMethod

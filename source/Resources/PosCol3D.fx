@@ -90,9 +90,8 @@ float4 Lambert(float kd, float4 cd)
 
 float Phong(float ks, float exp, float3 l, float3 v, float3 n)
 {
-    float theta =  max(dot(n,l),0.f);
-    float3 r = 2.f * theta * n - l ;
-    float alpha =  max(dot(r,v),0.f);
+    float3 ref = reflect(l, n);
+    float alpha = saturate(dot(ref,v));
 
 
     return  ks * pow(alpha, exp);
@@ -106,16 +105,18 @@ float4 PS(VS_OUTPUT input, SamplerState state) : SV_TARGET
     float4x4    tangentSpaceAxis = float4x4(float4(input.Tangent, 0.0f), float4(binormal, 0.0f), float4(input.Normal, 0.0f), float4(0.0f, 0.0f, 0.0f, 1.0f));
     
     float3      normalSample = 2.0f * gNormalMap.Sample(state, input.Uv).rgb - float3(1.0f, 1.0f, 1.0f);
-    normalSample = mul(normalize(float4(normalSample, 0.0f)), tangentSpaceAxis);
+    normalSample = normalize(normalSample);
+    normalSample = mul(float4(normalSample, 0.0f), tangentSpaceAxis);
 
-    float lambertCosine = saturate(dot(normalSample, gLightDir));
+
+    float lambertCosine = saturate(dot(normalSample, -gLightDir));
     float3 viewDirection = normalize(input.WorldPos.xyz - gViewInv[3].xyz);
 
     float3 diffuse = Lambert(gLightIntensity, gDiffuseMap.Sample(state, input.Uv));
-    float3 specular = gSpecularMap.Sample(state, input.Uv) * Phong(1.f, gShininess * gGlossinessMap.Sample(state, input.Uv).r, gLightDir, viewDirection, normalSample);
-
-    return float4((diffuse + specular + gAmbient) * lambertCosine,1.0f);
+    float3 specular = Phong(gSpecularMap.Sample(state, input.Uv), gShininess* gGlossinessMap.Sample(state, input.Uv).r, gLightDir, -viewDirection, normalSample);
     
+    return float4((specular + diffuse + gAmbient) * lambertCosine,1.0f);
+
 }
 
 float4 PS_samPoint(VS_OUTPUT input) : SV_TARGET

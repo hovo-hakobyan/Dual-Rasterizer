@@ -129,6 +129,19 @@ void Rasterizer_Software::ToggleNormalMap()
 	}
 }
 
+void Rasterizer_Software::ToggleBoundingBox()
+{
+	m_UseBoundingBoxVisualization = !m_UseBoundingBoxVisualization;
+	if (m_UseBoundingBoxVisualization)
+	{
+		std::cout << "**(SOFTWARE) BoundingBox Visualization ON\n";
+	}
+	else
+	{
+		std::cout << "**(SOFTWARE) BoundingBox Visualization OFF\n";
+	}
+}
+
 
 
 void Rasterizer_Software::RenderTriangleList(const Mesh* currentMesh)
@@ -202,7 +215,18 @@ void Rasterizer_Software::LoopOverPixels(const Vertex_Out& ver0, const Vertex_Ou
 		for (int py{ std::max(0,static_cast<int>(topLeft.y)) }; py <= std::min(m_Height, static_cast<int>(bottomRight.y)); ++py)
 		{
 			Vector2 pixel{ static_cast<float>(px), static_cast<float>(py) };
+			if (m_UseBoundingBoxVisualization)
+			{
+				ColorRGB finalColor{ 1.f,1.f,1.f };
+				//Update Color in Buffer
+				finalColor.MaxToOne();
 
+				m_pBackBufferPixels[px + (static_cast<int>(py) * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
+				continue;
+			}
 			if (Utils::IsInsideTriangle(pixel, v0, v1, v2, weight))
 			{
 				//Z interpolated non-linear
@@ -287,10 +311,6 @@ void Rasterizer_Software::PixelShading(const Vertex_Out& v)
 			Vector3 reflect = -m_LightDirection - 2 * std::max(Vector3::Dot(normal, -m_LightDirection), 0.f) * normal;
 			float alpha = std::max(Vector3::Dot(reflect, v.ViewDirection), 0.f);
 			ColorRGB specular = m_pVehicleSpecular->Sample(v.Uv) * powf(alpha, shininess * m_pVehicleGloss->Sample(v.Uv).r);
-
-			specular.r = std::max(0.f, specular.r);
-			specular.g = std::max(0.f, specular.g);
-			specular.b = std::max(0.f, specular.b);
 
 			ColorRGB ambient{ .025f,.025f, .025f };
 			ColorRGB diffuse{ Utils::Lambert(intensity, m_pVehicleDiffuse->Sample(v.Uv)) };

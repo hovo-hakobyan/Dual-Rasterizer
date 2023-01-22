@@ -89,7 +89,7 @@ int main(int argc, char* args[])
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F8)
 				{
-					//Bounding Box
+					pRenderer->ToggleBoundingBoxVisualisation();
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
 				{

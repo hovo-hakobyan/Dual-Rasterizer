@@ -26,6 +26,7 @@ public:
 	void CycleShadingMode();
 	void ToggleDepthBuffer();
 	void ToggleNormalMap();
+	void ToggleBoundingBox();
 
 private:
 	enum class ShadingMode
@@ -58,6 +59,7 @@ private:
 	ShadingMode m_ShadingMode{ ShadingMode::Combined };
 	bool m_ShadeDepth;
 	bool m_UseNormalMap;
+	bool m_UseBoundingBoxVisualization;
 
 	dae::Vector3 m_LightDirection{ .577f,-.577f,.577f };
 
