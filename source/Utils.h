@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include "Math.h"
+#include "DataTypes.h"
 
 namespace dae
 {
@@ -9,7 +10,7 @@ namespace dae
 		//Just parses vertices and indices
 #pragma warning(push)
 #pragma warning(disable : 4505) //Warning unreferenced local function
-		static bool ParseOBJ(const std::string& filename, std::vector<Vertex_In>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding = true)
+		static bool ParseOBJ(const std::string& filename, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding = true)
 		{
 			std::ifstream file(filename);
 			if (!file)
@@ -64,7 +65,7 @@ namespace dae
 					//add the material index as attibute to the attribute array
 					//
 					// Faces or triangles
-					Vertex_In vertex{};
+					Vertex vertex{};
 					size_t iPosition, iTexCoord, iNormal;
 
 					uint32_t tempIndices[3];
@@ -72,7 +73,7 @@ namespace dae
 					{
 						// OBJ format uses 1-based arrays
 						file >> iPosition;
-						vertex.position = positions[iPosition - 1];
+						vertex.Position = positions[iPosition - 1];
 
 						if ('/' == file.peek())//is next in buffer ==  '/' ?
 						{
@@ -82,7 +83,7 @@ namespace dae
 							{
 								// Optional texture coordinate
 								file >> iTexCoord;
-								vertex.uv = UVs[iTexCoord - 1];
+								vertex.Uv = UVs[iTexCoord - 1];
 							}
 
 							if ('/' == file.peek())
@@ -91,7 +92,7 @@ namespace dae
 
 								// Optional vertex normal
 								file >> iNormal;
-								vertex.normal = normals[iNormal - 1];
+								vertex.Normal = normals[iNormal - 1];
 							}
 						}
 
@@ -123,12 +124,12 @@ namespace dae
 				uint32_t index1 = indices[size_t(i) + 1];
 				uint32_t index2 = indices[size_t(i) + 2];
 
-				const Vector3& p0 = vertices[index0].position;
-				const Vector3& p1 = vertices[index1].position;
-				const Vector3& p2 = vertices[index2].position;
-				const Vector2& uv0 = vertices[index0].uv;
-				const Vector2& uv1 = vertices[index1].uv;
-				const Vector2& uv2 = vertices[index2].uv;
+				const Vector3& p0 = vertices[index0].Position;
+				const Vector3& p1 = vertices[index1].Position;
+				const Vector3& p2 = vertices[index2].Position;
+				const Vector2& uv0 = vertices[index0].Uv;
+				const Vector2& uv1 = vertices[index1].Uv;
+				const Vector2& uv2 = vertices[index2].Uv;
 
 				const Vector3 edge0 = p1 - p0;
 				const Vector3 edge1 = p2 - p0;
@@ -137,21 +138,21 @@ namespace dae
 				float r = 1.f / Vector2::Cross(diffX, diffY);
 
 				Vector3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
-				vertices[index0].tangent += tangent;
-				vertices[index1].tangent += tangent;
-				vertices[index2].tangent += tangent;
+				vertices[index0].Tangent += tangent;
+				vertices[index1].Tangent += tangent;
+				vertices[index2].Tangent += tangent;
 			}
 
 			//Create the Tangents (reject)
 			for (auto& v : vertices)
 			{
-				v.tangent = Vector3::Reject(v.tangent, v.normal).Normalized();
+				v.Tangent = Vector3::Reject(v.Tangent, v.Normal).Normalized();
 
 				if(flipAxisAndWinding)
 				{
-					v.position.z *= -1.f;
-					v.normal.z *= -1.f;
-					v.tangent.z *= -1.f;
+					v.Position.z *= -1.f;
+					v.Normal.z *= -1.f;
+					v.Tangent.z *= -1.f;
 				}
 
 			}
@@ -159,5 +160,53 @@ namespace dae
 			return true;
 		}
 #pragma warning(pop)
+
+		inline bool IsInsideTriangle(const Vector2& pixel, const Vector2& v0, const Vector2& v1, const Vector2& v2, Vector3& weight)
+		{
+			Vector2 vertexToPixel{};
+			Vector2 currentEdge{};
+
+			vertexToPixel = pixel - v1;
+			currentEdge = v2 - v1;
+			float area1{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			//Left handed --> clockwise is positive
+			if (area1 > 0)
+				return false;
+
+			vertexToPixel = pixel - v2;
+			currentEdge = v0 - v2;
+
+			float area2{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			if (area2 > 0)
+				return false;
+
+			vertexToPixel = pixel - v0;
+			currentEdge = v1 - v0;
+
+			float area3{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			if (area3 > 0)
+				return false;
+
+			const float totalArea{ area1 + area2 + area3 };
+			weight.x = area1 / totalArea;
+			weight.y = area2 / totalArea;
+			weight.z = area3 / totalArea;
+
+			return true;
+		}
+
+		/**
+		 * \param kd Diffuse Reflection Coefficient
+		 * \param cd Diffuse Color
+		 * \return Lambert Diffuse Color
+		 */
+		static ColorRGB Lambert(float kd, const ColorRGB& cd)
+		{
+			return { kd * cd / PI };
+		}
+
 	}
 }

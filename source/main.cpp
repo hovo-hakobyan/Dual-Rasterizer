@@ -26,9 +26,10 @@ int main(int argc, char* args[])
 
 	const uint32_t width = 640;
 	const uint32_t height = 480;
+	bool shouldPrintFPS = false;
 
 	SDL_Window* pWindow = SDL_CreateWindow(
-		"DirectX - ***Insert Name/Class***",
+		"Dual Rasterizer - Hovhannes Hakobyan (2DAE15)",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width, height, 0);
@@ -57,7 +58,51 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				//Test for a key
-				//if (e.key.keysym.scancode == SDL_SCANCODE_X)
+				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
+				{
+					pRenderer->ToggleRenderMethod();
+				}
+				
+				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				{
+					pRenderer->ToggleRotation();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+				{
+					//FireFX
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F4)
+				{
+					pRenderer->CycleSamplerFilter();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F5)
+				{
+					pRenderer->CycleShadingMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F6)
+				{
+					pRenderer->ToggleNormalMap();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F7)
+				{
+					pRenderer->ToggleDepthBufferVisualisation();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F8)
+				{
+					//Bounding Box
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
+				{
+					//Culling
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
+				{
+					pRenderer->ToggleUniformClearColor();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F11)
+				{
+					shouldPrintFPS = pRenderer->TogglePrintFPS();
+				}
 				break;
 			default: ;
 			}
@@ -71,12 +116,16 @@ int main(int argc, char* args[])
 
 		//--------- Timer ---------
 		pTimer->Update();
-		printTimer += pTimer->GetElapsed();
-		if (printTimer >= 1.f)
+		if (shouldPrintFPS)
 		{
-			printTimer = 0.f;
-			std::cout << "dFPS: " << pTimer->GetdFPS() << std::endl;
+			printTimer += pTimer->GetElapsed();
+			if (printTimer >= 1.f)
+			{
+				printTimer = 0.f;
+				std::cout << "dFPS: " << pTimer->GetdFPS() << std::endl;
+			}
 		}
+		
 	}
 	pTimer->Stop();
 
